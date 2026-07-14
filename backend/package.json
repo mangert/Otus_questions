@@ -10,10 +10,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.2.1"
   },
   "devDependencies": {
     "@mini-survey/shared": "*",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
     "@types/supertest": "^7.2.1",
