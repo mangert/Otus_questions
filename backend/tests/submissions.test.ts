@@ -1,5 +1,5 @@
 import type { SubmitAnswersRequest } from '@mini-survey/shared';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   clearSubmissions,
@@ -10,6 +10,10 @@ import {
 const submission: SubmitAnswersRequest = {
   answers: [{ questionId: 'name', value: 'Алексей' }],
 };
+
+beforeEach(() => {
+  clearSubmissions();
+});
 
 afterEach(() => {
   clearSubmissions();
