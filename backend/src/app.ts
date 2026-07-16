@@ -1,12 +1,12 @@
-import type { ApiError, SubmitAnswersRequest } from '@mini-survey/shared';
+import type { ApiError } from '@mini-survey/shared';
 import cors from 'cors';
 import type { ErrorRequestHandler } from 'express';
 import express from 'express';
 
 import { questions } from './questions.js';
+import { saveSubmission } from './submissions.js';
 import { validateSubmitAnswersRequest } from './validation.js';
 
-const submissions: SubmitAnswersRequest[] = [];
 const localDevelopmentOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
@@ -30,7 +30,7 @@ app.post('/answers', (request, response) => {
     return;
   }
 
-  submissions.push(validation.value);
+  saveSubmission(validation.value);
   response.status(201).end();
 });
 
