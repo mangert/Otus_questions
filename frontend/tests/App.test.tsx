@@ -1,5 +1,11 @@
 import type { GetQuestionsResponse } from '@mini-survey/shared';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -26,13 +32,16 @@ afterEach(() => {
 
 describe('App question loading', () => {
   it('shows a loading status while questions are requested', () => {
-    vi.spyOn(apiClient, 'getQuestions').mockImplementation(
-      () => new Promise(() => undefined),
-    );
+    const getQuestions = vi
+      .spyOn(apiClient, 'getQuestions')
+      .mockImplementation(() => new Promise(() => undefined));
 
     render(<App />);
 
     expect(screen.getByRole('status')).toHaveTextContent('Загружаем вопросы…');
+    expect(screen.queryByRole('form')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(getQuestions).toHaveBeenCalledOnce();
   });
 
   it('renders a required labelled text field for every loaded question', async () => {
@@ -47,13 +56,57 @@ describe('App question loading', () => {
 
     for (const question of questions) {
       const input = within(form).getByRole('textbox', { name: question.text });
+      const label = within(form).getByText(question.text, {
+        selector: 'label',
+      });
+
       expect(input).toBeRequired();
       expect(input).toHaveAttribute('id', `answer-${question.id}`);
       expect(input).toHaveAttribute('name', question.id);
       expect(input).toHaveAttribute('type', 'text');
+      expect(input).toHaveAccessibleName(question.text);
+      expect(label).toHaveAttribute('for', input.id);
     }
 
     expect(getQuestions).toHaveBeenCalledOnce();
+  });
+
+  it('updates every answer field when the user types', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(apiClient, 'getQuestions').mockResolvedValue(questions);
+    const values = ['Мария', 'Тестировщик', 'Четыре года', 'Углубить знания'];
+
+    render(<App />);
+
+    const form = await screen.findByRole('form', { name: 'Вопросы анкеты' });
+
+    for (const [index, question] of questions.entries()) {
+      const input = within(form).getByRole('textbox', { name: question.text });
+      expect(input).toHaveValue('');
+
+      await user.type(input, values[index]!);
+
+      expect(input).toHaveValue(values[index]);
+    }
+
+    for (const [index, question] of questions.entries()) {
+      expect(
+        within(form).getByRole('textbox', { name: question.text }),
+      ).toHaveValue(values[index]);
+    }
+  });
+
+  it('shows an API error message when questions cannot be loaded', async () => {
+    vi.spyOn(apiClient, 'getQuestions').mockRejectedValue(
+      new ApiClientError('Сервис вопросов временно недоступен.', 503),
+    );
+
+    render(<App />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toBeVisible();
+    expect(alert).toHaveTextContent('Сервис вопросов временно недоступен.');
+    expect(screen.queryByRole('form')).toBeNull();
   });
 
   it('submits stored answers once and replaces the form after success', async () => {
@@ -91,7 +144,11 @@ describe('App question loading', () => {
     });
     expect(submitButton).toBeDisabled();
     expect(submitButton).toHaveTextContent('Отправляем…');
+    for (const input of within(form).getAllByRole('textbox')) {
+      expect(input).toBeDisabled();
+    }
 
+    fireEvent.submit(form);
     await user.click(submitButton);
     expect(submitAnswers).toHaveBeenCalledOnce();
 
@@ -154,6 +211,7 @@ describe('App question loading', () => {
     );
 
     const alert = await within(form).findByRole('alert');
+    expect(alert).toBeVisible();
     expect(alert).toHaveTextContent('Ответы не приняты.');
 
     for (const [index, question] of questions.entries()) {
