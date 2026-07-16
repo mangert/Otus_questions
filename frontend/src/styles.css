@@ -1,35 +1,289 @@
 :root {
-  color: #1f2937;
-  background: #f3f4f6;
-  font-family: Inter, system-ui, sans-serif;
+  color: #36f9f6;
+  background: #030305;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   font-synthesis: none;
+  color-scheme: dark;
+
+  --background: #030305;
+  --surface: #0b0b10;
+  --surface-raised: #12121a;
+  --fuchsia: #ff3bd4;
+  --cyan: #36f9f6;
+  --magenta: #ff008c;
+  --yellow: #fff43d;
+  --muted: #b9a9c8;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--background);
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 12%, rgb(255 0 140 / 18%), transparent 34rem),
+    radial-gradient(
+      circle at 88% 88%,
+      rgb(54 249 246 / 14%),
+      transparent 32rem
+    ),
+    var(--background);
+  color: var(--cyan);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: var(--fuchsia);
+  color: var(--background);
 }
 
 .app-shell {
   display: grid;
   min-height: 100vh;
   place-items: center;
-  padding: 1.5rem;
+  padding: clamp(1rem, 4vw, 3rem);
 }
 
 .survey-card {
+  position: relative;
+  overflow: hidden;
   width: min(100%, 40rem);
-  padding: 2rem;
-  border-radius: 1rem;
-  background: #ffffff;
-  box-shadow: 0 1rem 2.5rem rgb(15 23 42 / 10%);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border: 1px solid rgb(255 59 212 / 55%);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, rgb(18 18 26 / 96%), rgb(7 7 11 / 98%));
+  box-shadow:
+    0 1.5rem 5rem rgb(0 0 0 / 70%),
+    0 0 2.5rem rgb(255 0 140 / 14%);
+}
+
+.survey-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0.3rem;
+  background: linear-gradient(
+    90deg,
+    var(--fuchsia),
+    var(--cyan),
+    var(--yellow),
+    var(--magenta)
+  );
+  content: '';
 }
 
 .survey-card h1 {
-  margin-top: 0;
+  margin: 0 0 0.75rem;
+  color: var(--fuchsia);
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-shadow: 0 0 1.5rem rgb(255 59 212 / 35%);
+}
+
+.survey-intro {
+  margin: 0;
+  color: var(--cyan);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.survey-form {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.form-label {
+  color: var(--yellow);
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.form-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgb(185 169 200 / 55%);
+  border-radius: 0.7rem;
+  outline: none;
+  background: #050508;
+  color: var(--cyan);
+  caret-color: var(--fuchsia);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.form-input::placeholder {
+  color: #82738f;
+}
+
+.form-input:hover {
+  border-color: var(--magenta);
+}
+
+.form-input:focus-visible {
+  border-color: var(--cyan);
+  background: #09090f;
+  box-shadow: 0 0 0 0.2rem rgb(54 249 246 / 18%);
+}
+
+.form-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.submit-button {
+  min-height: 3.1rem;
+  padding: 0.8rem 1.25rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: linear-gradient(115deg, var(--fuchsia), var(--magenta));
+  color: #09030a;
+  cursor: pointer;
+  font-weight: 850;
+  letter-spacing: 0.025em;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  filter: saturate(1.2) brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 0.75rem 2rem rgb(255 0 140 / 28%);
+}
+
+.submit-button:focus-visible {
+  outline: 0.2rem solid var(--yellow);
+  outline-offset: 0.2rem;
+}
+
+.submit-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+  opacity: 0.52;
+}
+
+.retry-button {
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--cyan);
+  border-radius: 0.65rem;
+  background: transparent;
+  color: var(--cyan);
+  cursor: pointer;
+  font-weight: 750;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.retry-button:hover {
+  background: var(--cyan);
+  color: var(--background);
+  box-shadow: 0 0 1.5rem rgb(54 249 246 / 22%);
+}
+
+.retry-button:focus-visible {
+  outline: 0.2rem solid var(--yellow);
+  outline-offset: 0.2rem;
+}
+
+.status-message {
+  margin: 1.5rem 0 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.75rem;
+  background: rgb(3 3 5 / 70%);
+  line-height: 1.5;
+}
+
+.loading-message {
+  color: var(--cyan);
+}
+
+.error-message {
+  border-color: var(--magenta);
+  color: var(--yellow);
+}
+
+.error-message p,
+.survey-form .status-message {
+  margin: 0;
+}
+
+.success-message {
+  border-color: var(--fuchsia);
+  color: var(--cyan);
+}
+
+.success-message h2 {
+  margin: 0 0 0.5rem;
+  color: var(--yellow);
+}
+
+.success-message p {
+  margin: 0;
+}
+
+@media (max-width: 30rem) {
+  .app-shell {
+    align-items: start;
+    padding: 0.75rem;
+  }
+
+  .survey-card {
+    padding: 1.35rem 1rem;
+    border-radius: 0.9rem;
+  }
+
+  .survey-card h1 {
+    font-size: 2.25rem;
+  }
+
+  .submit-button,
+  .retry-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-input,
+  .submit-button,
+  .retry-button {
+    transition: none;
+  }
 }
