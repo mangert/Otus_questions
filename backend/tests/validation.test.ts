@@ -12,7 +12,7 @@ const createValidRequest = (): SubmitAnswersRequest => ({
   ],
 });
 
-const expectInvalidRequest = (body: unknown): void => {
+const expectInvalidRequest = (body: unknown, expectedError?: string): void => {
   const result = validateSubmitAnswersRequest(body);
 
   expect(result.valid).toBe(false);
@@ -22,6 +22,10 @@ const expectInvalidRequest = (body: unknown): void => {
   }
 
   expect(result.error.trim()).not.toHaveLength(0);
+
+  if (expectedError !== undefined) {
+    expect(result.error).toBe(expectedError);
+  }
 };
 
 describe('validateSubmitAnswersRequest', () => {
@@ -47,21 +51,51 @@ describe('validateSubmitAnswersRequest', () => {
       const request = createValidRequest();
       request.answers[0]!.value = value;
 
-      expectInvalidRequest(request);
+      expectInvalidRequest(
+        request,
+        'Поля questionId и value элемента answers[0] не должны быть пустыми.',
+      );
     },
   );
 
+  it('reports the index of an answer that is not an object', () => {
+    const request = createValidRequest() as unknown as { answers: unknown[] };
+    request.answers[2] = null;
+
+    expectInvalidRequest(request, 'Элемент answers[2] должен быть объектом.');
+  });
+
+  it('reports the index of an answer with non-string fields', () => {
+    const request = createValidRequest();
+    const body = {
+      answers: request.answers.map((answer, index) =>
+        index === 2 ? { ...answer, value: 42 } : answer,
+      ),
+    };
+
+    expectInvalidRequest(
+      body,
+      'Поля questionId и value элемента answers[2] должны быть строками.',
+    );
+  });
+
   it('rejects an unknown question identifier', () => {
     const request = createValidRequest();
-    request.answers[0]!.questionId = 'unknown-question';
+    request.answers[2]!.questionId = 'unknown-question';
 
-    expectInvalidRequest(request);
+    expectInvalidRequest(
+      request,
+      'Элемент answers[2] содержит неизвестный questionId.',
+    );
   });
 
   it('rejects a repeated question identifier', () => {
     const request = createValidRequest();
     request.answers[1]!.questionId = request.answers[0]!.questionId;
 
-    expectInvalidRequest(request);
+    expectInvalidRequest(
+      request,
+      'Элемент answers[1] содержит повторяющийся questionId.',
+    );
   });
 });

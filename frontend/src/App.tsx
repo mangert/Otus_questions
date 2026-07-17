@@ -15,6 +15,8 @@ type QuestionsState =
 
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof ApiClientError ? error.message : fallback;
+const questionsLoadErrorMessage =
+  'Не удалось загрузить вопросы. Проверьте соединение и попробуйте ещё раз.';
 
 export function App() {
   const [questionsState, setQuestionsState] = useState<QuestionsState>({
@@ -24,6 +26,7 @@ export function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const submissionInProgress = useRef(false);
   const isMounted = useRef(false);
   const loadRequestId = useRef(0);
@@ -32,52 +35,30 @@ export function App() {
     isMounted.current = true;
     const requestId = ++loadRequestId.current;
 
-    void apiClient.getQuestions().then(
-      (questions) => {
+    void apiClient
+      .getQuestions()
+      .then<QuestionsState>((questions) => ({
+        status: 'success',
+        questions,
+      }))
+      .catch<QuestionsState>((error: unknown) => ({
+        status: 'error',
+        message: getErrorMessage(error, questionsLoadErrorMessage),
+      }))
+      .then((nextState) => {
         if (isMounted.current && requestId === loadRequestId.current) {
-          setQuestionsState({ status: 'success', questions });
+          setQuestionsState(nextState);
         }
-      },
-      (error: unknown) => {
-        if (isMounted.current && requestId === loadRequestId.current) {
-          setQuestionsState({
-            status: 'error',
-            message: getErrorMessage(
-              error,
-              'Не удалось загрузить вопросы. Проверьте соединение и попробуйте ещё раз.',
-            ),
-          });
-        }
-      },
-    );
+      });
 
     return () => {
       isMounted.current = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   const retryQuestions = (): void => {
-    const requestId = ++loadRequestId.current;
     setQuestionsState({ status: 'loading' });
-
-    void apiClient.getQuestions().then(
-      (questions) => {
-        if (isMounted.current && requestId === loadRequestId.current) {
-          setQuestionsState({ status: 'success', questions });
-        }
-      },
-      (error: unknown) => {
-        if (isMounted.current && requestId === loadRequestId.current) {
-          setQuestionsState({
-            status: 'error',
-            message: getErrorMessage(
-              error,
-              'Не удалось загрузить вопросы. Проверьте соединение и попробуйте ещё раз.',
-            ),
-          });
-        }
-      },
-    );
+    setLoadAttempt((currentAttempt) => currentAttempt + 1);
   };
 
   const handleSubmit = async (

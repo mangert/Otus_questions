@@ -28,11 +28,11 @@ export const validateSubmitAnswersRequest = (
   const answers: Answer[] = [];
   const seenQuestionIds = new Set<string>();
 
-  for (const candidate of body.answers) {
+  for (const [index, candidate] of body.answers.entries()) {
     if (!isRecord(candidate)) {
       return {
         valid: false,
-        error: 'Каждый элемент answers должен быть объектом.',
+        error: `Элемент answers[${index}] должен быть объектом.`,
       };
     }
 
@@ -41,23 +41,29 @@ export const validateSubmitAnswersRequest = (
     if (typeof questionId !== 'string' || typeof value !== 'string') {
       return {
         valid: false,
-        error: 'Поля questionId и value должны быть строками.',
+        error: `Поля questionId и value элемента answers[${index}] должны быть строками.`,
       };
     }
 
     if (questionId.trim() === '' || value.trim() === '') {
       return {
         valid: false,
-        error: 'Поля questionId и value не должны быть пустыми.',
+        error: `Поля questionId и value элемента answers[${index}] не должны быть пустыми.`,
       };
     }
 
     if (!questionIds.has(questionId)) {
-      return { valid: false, error: 'Указан неизвестный questionId.' };
+      return {
+        valid: false,
+        error: `Элемент answers[${index}] содержит неизвестный questionId.`,
+      };
     }
 
     if (seenQuestionIds.has(questionId)) {
-      return { valid: false, error: 'questionId не должен повторяться.' };
+      return {
+        valid: false,
+        error: `Элемент answers[${index}] содержит повторяющийся questionId.`,
+      };
     }
 
     seenQuestionIds.add(questionId);

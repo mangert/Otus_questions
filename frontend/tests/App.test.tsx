@@ -1,5 +1,7 @@
 import type { GetQuestionsResponse } from '@mini-survey/shared';
+import { StrictMode } from 'react';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -42,6 +44,46 @@ describe('App question loading', () => {
     expect(screen.queryByRole('form')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
     expect(getQuestions).toHaveBeenCalledOnce();
+  });
+
+  it('ignores a stale response from an earlier Strict Mode request', async () => {
+    let resolveFirstRequest!: (questions: GetQuestionsResponse) => void;
+    let resolveSecondRequest!: (questions: GetQuestionsResponse) => void;
+    const firstRequest = new Promise<GetQuestionsResponse>((resolve) => {
+      resolveFirstRequest = resolve;
+    });
+    const secondRequest = new Promise<GetQuestionsResponse>((resolve) => {
+      resolveSecondRequest = resolve;
+    });
+    const getQuestions = vi
+      .spyOn(apiClient, 'getQuestions')
+      .mockReturnValueOnce(firstRequest)
+      .mockReturnValueOnce(secondRequest);
+
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+
+    expect(getQuestions).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolveFirstRequest(questions);
+      await firstRequest;
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Загружаем вопросы…');
+    expect(screen.queryByRole('form')).toBeNull();
+
+    await act(async () => {
+      resolveSecondRequest(questions);
+      await secondRequest;
+    });
+
+    expect(
+      await screen.findByRole('form', { name: 'Вопросы анкеты' }),
+    ).toBeInTheDocument();
   });
 
   it('renders a required labelled text field for every loaded question', async () => {
@@ -164,10 +206,14 @@ describe('App question loading', () => {
 
   it('shows a loading error and retries the request', async () => {
     const user = userEvent.setup();
+    let resolveRetry!: (questions: GetQuestionsResponse) => void;
+    const retryRequest = new Promise<GetQuestionsResponse>((resolve) => {
+      resolveRetry = resolve;
+    });
     const getQuestions = vi
       .spyOn(apiClient, 'getQuestions')
       .mockRejectedValueOnce(new Error('Network error'))
-      .mockResolvedValueOnce(questions);
+      .mockReturnValueOnce(retryRequest);
 
     render(<App />);
 
@@ -180,10 +226,13 @@ describe('App question loading', () => {
       within(alert).getByRole('button', { name: 'Повторить загрузку' }),
     );
 
+    expect(screen.getByRole('status')).toHaveTextContent('Загружаем вопросы…');
+    expect(getQuestions).toHaveBeenCalledTimes(2);
+
+    resolveRetry(questions);
     expect(
       await screen.findByRole('form', { name: 'Вопросы анкеты' }),
     ).toBeInTheDocument();
-    expect(getQuestions).toHaveBeenCalledTimes(2);
   });
 
   it('preserves answers and retries a failed submission', async () => {
