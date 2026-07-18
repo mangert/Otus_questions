@@ -1,3 +1,5 @@
+// Configures the Express application, API routes, middleware, and error handling.
+
 import type { ApiError } from '@mini-survey/shared';
 import cors from 'cors';
 import type { ErrorRequestHandler } from 'express';

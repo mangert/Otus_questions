@@ -1,3 +1,5 @@
+// Configures Vite and the frontend Vitest environment.
+
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 

@@ -1,3 +1,5 @@
+// Validates incoming answer submissions against the survey contract.
+
 import type { Answer, SubmitAnswersRequest } from '@mini-survey/shared';
 
 import { questions } from './questions.js';
@@ -11,6 +13,7 @@ const questionIds = new Set<string>(questions.map(({ id }) => id));
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/** Validates an unknown request body and returns normalized answers or an error. */
 export const validateSubmitAnswersRequest = (
   body: unknown,
 ): SubmitAnswersValidationResult => {

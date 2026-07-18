@@ -1,3 +1,5 @@
+// Tests frontend API URL handling, requests, responses, and error reporting.
+
 import type {
   GetQuestionsResponse,
   SubmitAnswersRequest,

@@ -1,3 +1,5 @@
+// Renders the survey interface and coordinates its API-driven states.
+
 import type {
   GetQuestionsResponse,
   SubmitAnswersRequest,
@@ -18,6 +20,7 @@ const getErrorMessage = (error: unknown, fallback: string): string =>
 const questionsLoadErrorMessage =
   'Не удалось загрузить вопросы. Проверьте соединение и попробуйте ещё раз.';
 
+/** Renders the survey and manages loading, editing, submission, and retries. */
 export function App() {
   const [questionsState, setQuestionsState] = useState<QuestionsState>({
     status: 'loading',

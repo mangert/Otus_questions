@@ -1,3 +1,5 @@
+// Adds Vite client environment types to the frontend project.
+
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {

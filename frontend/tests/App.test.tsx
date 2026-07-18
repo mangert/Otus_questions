@@ -1,3 +1,5 @@
+// Tests survey rendering, interaction, accessibility, retries, and submission states.
+
 import type { GetQuestionsResponse } from '@mini-survey/shared';
 import { StrictMode } from 'react';
 import {

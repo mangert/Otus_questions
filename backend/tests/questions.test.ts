@@ -1,3 +1,5 @@
+// Tests the survey question collection and its immutability.
+
 import { describe, expect, it } from 'vitest';
 
 import { questions } from '../src/questions.js';

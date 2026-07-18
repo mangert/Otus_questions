@@ -1,3 +1,5 @@
+// Provides the typed HTTP client used to communicate with the survey backend.
+
 import type {
   ApiError,
   GetQuestionsResponse,
@@ -7,6 +9,7 @@ import type {
 
 const defaultApiUrl = 'http://localhost:3000';
 
+/** Normalizes and validates an API base URL. */
 export const normalizeApiUrl = (url: string): string => {
   const normalizedUrl = url.trim().replace(/\/+$/, '');
 
@@ -21,6 +24,7 @@ export const apiBaseUrl = normalizeApiUrl(
   import.meta.env.VITE_API_URL ?? defaultApiUrl,
 );
 
+/** Builds an endpoint URL from a path and API base URL. */
 export const buildApiUrl = (
   path: string,
   baseUrl: string = apiBaseUrl,
@@ -34,6 +38,7 @@ export const buildApiUrl = (
   return `${normalizeApiUrl(baseUrl)}/${normalizedPath}`;
 };
 
+/** Describes the survey operations available to the frontend. */
 export interface SurveyApiClient {
   getQuestions(): Promise<GetQuestionsResponse>;
   submitAnswers(request: SubmitAnswersRequest): Promise<SubmitAnswersResponse>;
@@ -62,6 +67,7 @@ const readApiErrorMessage = async (
   }
 };
 
+/** Represents a failed API request together with its HTTP status. */
 export class ApiClientError extends Error {
   public constructor(
     message: string,
@@ -72,6 +78,7 @@ export class ApiClientError extends Error {
   }
 }
 
+/** Implements survey API operations with an injectable fetch function. */
 export class HttpSurveyApiClient implements SurveyApiClient {
   public constructor(
     private readonly baseUrl: string = apiBaseUrl,
@@ -80,6 +87,7 @@ export class HttpSurveyApiClient implements SurveyApiClient {
     ),
   ) {}
 
+  /** Loads survey questions from the backend. */
   public async getQuestions(): Promise<GetQuestionsResponse> {
     const response = await this.fetchFunction(
       buildApiUrl('/questions', this.baseUrl),
@@ -100,6 +108,7 @@ export class HttpSurveyApiClient implements SurveyApiClient {
     return (await response.json()) as GetQuestionsResponse;
   }
 
+  /** Sends a complete set of survey answers to the backend. */
   public async submitAnswers(
     request: SubmitAnswersRequest,
   ): Promise<SubmitAnswersResponse> {

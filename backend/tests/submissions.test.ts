@@ -1,3 +1,5 @@
+// Tests in-memory submission storage and defensive copying behavior.
+
 import type { SubmitAnswersRequest } from '@mini-survey/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 

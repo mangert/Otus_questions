@@ -1,3 +1,5 @@
+// Tests backend API routes, middleware, validation, and error responses.
+
 import type {
   ApiError,
   GetQuestionsResponse,

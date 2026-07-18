@@ -1,3 +1,5 @@
+// Starts the HTTP server and coordinates its graceful shutdown.
+
 import type { Server } from 'node:http';
 
 import { app } from './app.js';
@@ -16,6 +18,7 @@ export interface RunningServer {
   shutdown(signal?: ShutdownSignal): Promise<void>;
 }
 
+/** Starts the backend on the given port and returns controls for shutting it down. */
 export const startServer = (
   port: number,
   logger: ServerLogger = console,

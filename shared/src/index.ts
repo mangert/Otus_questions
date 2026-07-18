@@ -1,3 +1,5 @@
+// Defines TypeScript contracts shared by the backend and frontend.
+
 /** A question displayed in the survey. */
 export interface Question {
   id: string;

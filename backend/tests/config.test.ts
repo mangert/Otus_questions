@@ -1,3 +1,5 @@
+// Tests parsing and fallback behavior for backend CORS configuration.
+
 import { describe, expect, it } from 'vitest';
 
 import { defaultCorsOrigins, parseCorsOrigins } from '../src/config.js';

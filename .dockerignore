@@ -1,0 +1,27 @@
+# Excludes local, generated, and development-only files from Docker build contexts.
+
+.git
+.gitignore
+.dockerignore
+.idea
+.vscode
+
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.cache
+
+.env
+.env.*
+!.env.example
+
+**/*.log
+**/*.tmp
+**/*.temp
+**/.DS_Store
+**/Thumbs.db
+**/Desktop.ini
+
+docs
+*.md

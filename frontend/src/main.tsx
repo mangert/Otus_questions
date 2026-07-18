@@ -1,3 +1,5 @@
+// Mounts the React application in Strict Mode.
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 

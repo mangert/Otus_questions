@@ -1,3 +1,5 @@
+// Tests validation of complete, malformed, unknown, and duplicate survey answers.
+
 import type { SubmitAnswersRequest } from '@mini-survey/shared';
 import { describe, expect, it } from 'vitest';
 

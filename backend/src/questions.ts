@@ -1,3 +1,5 @@
+// Provides the immutable collection of survey questions served by the API.
+
 import type { GetQuestionsResponse } from '@mini-survey/shared';
 
 export const questions = Object.freeze([

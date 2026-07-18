@@ -1,3 +1,5 @@
+// Tests backend startup, shutdown, signal handling, and listener errors.
+
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';

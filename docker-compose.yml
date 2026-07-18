@@ -1,0 +1,31 @@
+# Builds and connects the backend and frontend containers for local production use.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      PORT: 3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    expose:
+      - '3000'
+    networks:
+      - survey-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    depends_on:
+      - backend
+    ports:
+      - '${FRONTEND_PORT:-8081}:80'
+    networks:
+      - survey-network
+
+networks:
+  survey-network:
+    driver: bridge
