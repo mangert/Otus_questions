@@ -10,6 +10,10 @@ readonly BACKEND_IMAGE="mini-survey-backend:latest"
 readonly FRONTEND_IMAGE="mini-survey-frontend:latest"
 readonly BACKEND_ARCHIVE="${SCRIPT_DIR}/mini-survey-backend.tar"
 readonly FRONTEND_ARCHIVE="${SCRIPT_DIR}/mini-survey-frontend.tar"
+readonly BACKEND_ARCHIVE_SIZE="58686464"
+readonly FRONTEND_ARCHIVE_SIZE="26088448"
+readonly BACKEND_ARCHIVE_SHA256="c214ad1cac655d3069898ad2188dc2b7418b61abd9618d763e0c2761135274b8"
+readonly FRONTEND_ARCHIVE_SHA256="d5ced6be58283bde85a571d47488d37183c1785d94bda8fa533dddda2a606f28"
 
 info() {
   printf '[INFO] %s\n' "$1"
@@ -28,9 +32,64 @@ require_command() {
   fi
 }
 
+# Calculates a SHA-256 checksum using a utility available on Linux or macOS.
+calculate_sha256() {
+  local archive_path="$1"
+  local checksum_output
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    checksum_output="$(sha256sum "${archive_path}")"
+  elif command -v shasum >/dev/null 2>&1; then
+    checksum_output="$(shasum --algorithm 256 "${archive_path}")"
+  else
+    error "Cannot verify ${archive_path}: neither 'sha256sum' nor 'shasum' is available."
+    exit 1
+  fi
+
+  printf '%s\n' "${checksum_output%% *}"
+}
+
+# Rejects Git LFS pointers, incomplete downloads, and corrupted image archives.
+validate_archive() {
+  local archive_path="$1"
+  local expected_size="$2"
+  local expected_sha256="$3"
+  local actual_size
+  local actual_sha256
+
+  actual_size="$(wc -c <"${archive_path}")"
+  actual_size="${actual_size//[[:space:]]/}"
+
+  if [[ "${actual_size}" -lt 1024 ]] && grep -Fqx \
+    'version https://git-lfs.github.com/spec/v1' "${archive_path}"; then
+    error "Archive ${archive_path} is a Git LFS pointer, not a Docker image."
+    error "Install Git LFS, then run 'git lfs pull' in the repository and try again."
+    exit 1
+  fi
+
+  if [[ "${actual_size}" != "${expected_size}" ]]; then
+    error "Archive ${archive_path} has an unexpected size: ${actual_size} bytes; expected ${expected_size}."
+    error "Restore it with 'git lfs pull && git lfs checkout' and try again."
+    exit 1
+  fi
+
+  actual_sha256="$(calculate_sha256 "${archive_path}")"
+
+  if [[ "${actual_sha256}" != "${expected_sha256}" ]]; then
+    error "Archive ${archive_path} failed the SHA-256 integrity check."
+    error "Expected ${expected_sha256}, but received ${actual_sha256}."
+    error "Restore it with 'git lfs pull && git lfs checkout' and try again."
+    exit 1
+  fi
+
+  info "Archive ${archive_path} passed the integrity check."
+}
+
 ensure_image() {
   local image_name="$1"
   local archive_path="$2"
+  local expected_size="$3"
+  local expected_sha256="$4"
 
   if docker image inspect "${image_name}" >/dev/null 2>&1; then
     info "Docker image ${image_name} already exists; loading is not required."
@@ -41,6 +100,9 @@ ensure_image() {
     error "Docker image ${image_name} is missing, and archive ${archive_path} was not found."
     exit 1
   fi
+
+  info "Checking Docker image archive ${archive_path}."
+  validate_archive "${archive_path}" "${expected_size}" "${expected_sha256}"
 
   info "Loading Docker image ${image_name} from ${archive_path}."
   docker image load --input "${archive_path}"
@@ -94,8 +156,16 @@ main() {
     exit 1
   fi
 
-  ensure_image "${BACKEND_IMAGE}" "${BACKEND_ARCHIVE}"
-  ensure_image "${FRONTEND_IMAGE}" "${FRONTEND_ARCHIVE}"
+  ensure_image \
+    "${BACKEND_IMAGE}" \
+    "${BACKEND_ARCHIVE}" \
+    "${BACKEND_ARCHIVE_SIZE}" \
+    "${BACKEND_ARCHIVE_SHA256}"
+  ensure_image \
+    "${FRONTEND_IMAGE}" \
+    "${FRONTEND_ARCHIVE}" \
+    "${FRONTEND_ARCHIVE_SIZE}" \
+    "${FRONTEND_ARCHIVE_SHA256}"
 
   info "Starting the application with Docker Compose."
   docker compose --file "${COMPOSE_FILE}" up --detach --no-build
@@ -111,4 +181,6 @@ main() {
   wait_for_frontend "${application_url}"
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
